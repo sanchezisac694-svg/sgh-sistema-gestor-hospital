@@ -1,0 +1,273 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RolNombre {
+  ADMIN
+  DOCTOR
+  ENFERMERO
+  RECEPCIONISTA
+  PACIENTE
+}
+
+enum EstadoCita {
+  PENDIENTE
+  CONFIRMADA
+  CANCELADA
+  REPROGRAMADA
+  ATENDIDA
+  NO_ASISTIO
+}
+
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+}
+
+enum SexoPaciente {
+  MASCULINO
+  FEMENINO
+  OTRO
+  NO_ESPECIFICADO
+}
+
+model Rol {
+  id          String    @id @default(uuid()) @db.Uuid
+  nombre      RolNombre @unique
+  descripcion String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  usuarios Usuario[]
+
+  @@map("roles")
+}
+
+model Usuario {
+  id              String    @id @default(uuid()) @db.Uuid
+  rolId           String    @map("rol_id") @db.Uuid
+  nombre          String    @db.VarChar(100)
+  apellidoPaterno String    @map("apellido_paterno") @db.VarChar(100)
+  apellidoMaterno String?   @map("apellido_materno") @db.VarChar(100)
+  correo          String    @unique @db.VarChar(150)
+  passwordHash    String    @map("password_hash")
+  telefono        String?   @db.VarChar(20)
+  estado          Boolean   @default(true)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
+
+  rol Rol @relation(fields: [rolId], references: [id])
+
+  doctor                 Doctor?
+  enfermero              Enfermero?
+  personalAdministrativo PersonalAdministrativo?
+  paciente               Paciente?
+  historialCitas         HistorialCita[]
+  auditorias             AuditoriaBasica[]
+
+  @@map("usuarios")
+}
+
+model Especialidad {
+  id          String    @id @default(uuid()) @db.Uuid
+  nombre      String    @unique @db.VarChar(100)
+  descripcion String?
+  estado      Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime? @updatedAt @map("updated_at")
+
+  doctores Doctor[]
+  citas    Cita[]
+
+  @@map("especialidades")
+}
+
+model Turno {
+  id          String    @id @default(uuid()) @db.Uuid
+  nombre      String    @db.VarChar(100)
+  horaInicio  DateTime  @map("hora_inicio") @db.Time
+  horaFin     DateTime  @map("hora_fin") @db.Time
+  descripcion String?
+  estado      Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime? @updatedAt @map("updated_at")
+
+  enfermeros Enfermero[]
+
+  @@map("turnos")
+}
+
+model Doctor {
+  id                String    @id @default(uuid()) @db.Uuid
+  usuarioId         String    @unique @map("usuario_id") @db.Uuid
+  especialidadId    String    @map("especialidad_id") @db.Uuid
+  cedulaProfesional String    @unique @map("cedula_profesional") @db.VarChar(50)
+  consultorio       String    @db.VarChar(50)
+  biografia         String?
+  fotoUrl           String?   @map("foto_url")
+  estado            Boolean   @default(true)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime? @updatedAt @map("updated_at")
+
+  usuario      Usuario      @relation(fields: [usuarioId], references: [id])
+  especialidad Especialidad @relation(fields: [especialidadId], references: [id])
+
+  horarios      Horario[]
+  citas         Cita[]
+  observaciones ObservacionConsulta[]
+
+  @@map("doctores")
+}
+
+model Enfermero {
+  id           String    @id @default(uuid()) @db.Uuid
+  usuarioId    String    @unique @map("usuario_id") @db.Uuid
+  areaAsignada String?   @map("area_asignada") @db.VarChar(100)
+  turnoId      String?   @map("turno_id") @db.Uuid
+  estado       Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime? @updatedAt @map("updated_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  turno   Turno?  @relation(fields: [turnoId], references: [id])
+
+  @@map("enfermeros")
+}
+
+model PersonalAdministrativo {
+  id        String    @id @default(uuid()) @db.Uuid
+  usuarioId String    @unique @map("usuario_id") @db.Uuid
+  puesto    String    @db.VarChar(100)
+  estado    Boolean   @default(true)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@map("personal_administrativo")
+}
+
+model Paciente {
+  id                 String       @id @default(uuid()) @db.Uuid
+  usuarioId          String       @unique @map("usuario_id") @db.Uuid
+  fechaNacimiento    DateTime?    @map("fecha_nacimiento") @db.Date
+  sexo               SexoPaciente @default(NO_ESPECIFICADO)
+  direccion          String?
+  contactoEmergencia String?      @map("contacto_emergencia") @db.VarChar(150)
+  telefonoEmergencia String?      @map("telefono_emergencia") @db.VarChar(20)
+  estado             Boolean      @default(true)
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime?    @updatedAt @map("updated_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  citas         Cita[]
+  observaciones ObservacionConsulta[]
+
+  @@map("pacientes")
+}
+
+model Horario {
+  id                  String    @id @default(uuid()) @db.Uuid
+  doctorId            String    @map("doctor_id") @db.Uuid
+  diaSemana           DiaSemana @map("dia_semana")
+  horaInicio          DateTime  @map("hora_inicio") @db.Time
+  horaFin             DateTime  @map("hora_fin") @db.Time
+  duracionCitaMinutos Int       @default(30) @map("duracion_cita_minutos")
+  consultorio         String?   @db.VarChar(50)
+  estado              Boolean   @default(true)
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime? @updatedAt @map("updated_at")
+
+  doctor Doctor @relation(fields: [doctorId], references: [id])
+
+  @@index([doctorId])
+  @@map("horarios")
+}
+
+model Cita {
+  id                 String     @id @default(uuid()) @db.Uuid
+  folio              String     @unique @db.VarChar(50)
+  pacienteId         String     @map("paciente_id") @db.Uuid
+  doctorId           String     @map("doctor_id") @db.Uuid
+  especialidadId     String     @map("especialidad_id") @db.Uuid
+  fecha              DateTime   @db.Date
+  horaInicio         DateTime   @map("hora_inicio") @db.Time
+  horaFin            DateTime   @map("hora_fin") @db.Time
+  motivoConsulta     String     @map("motivo_consulta")
+  estado             EstadoCita @default(PENDIENTE)
+  observacionesAdmin String?    @map("observaciones_admin")
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime?  @updatedAt @map("updated_at")
+
+  paciente     Paciente     @relation(fields: [pacienteId], references: [id])
+  doctor       Doctor       @relation(fields: [doctorId], references: [id])
+  especialidad Especialidad @relation(fields: [especialidadId], references: [id])
+
+  observacion    ObservacionConsulta?
+  historialCitas HistorialCita[]
+
+  @@index([doctorId, fecha])
+  @@index([pacienteId])
+  @@index([estado])
+  @@map("citas")
+}
+
+model ObservacionConsulta {
+  id                 String    @id @default(uuid()) @db.Uuid
+  citaId             String    @unique @map("cita_id") @db.Uuid
+  doctorId           String    @map("doctor_id") @db.Uuid
+  pacienteId         String    @map("paciente_id") @db.Uuid
+  observaciones      String
+  diagnosticoInicial String?   @map("diagnostico_inicial")
+  recomendaciones    String?
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime? @updatedAt @map("updated_at")
+
+  cita     Cita     @relation(fields: [citaId], references: [id])
+  doctor   Doctor   @relation(fields: [doctorId], references: [id])
+  paciente Paciente @relation(fields: [pacienteId], references: [id])
+
+  @@index([citaId])
+  @@map("observaciones_consulta")
+}
+
+model HistorialCita {
+  id             String      @id @default(uuid()) @db.Uuid
+  citaId         String      @map("cita_id") @db.Uuid
+  usuarioId      String      @map("usuario_id") @db.Uuid
+  estadoAnterior EstadoCita? @map("estado_anterior")
+  estadoNuevo    EstadoCita? @map("estado_nuevo")
+  comentario     String?
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  cita    Cita    @relation(fields: [citaId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@index([citaId])
+  @@map("historial_citas")
+}
+
+model AuditoriaBasica {
+  id            String   @id @default(uuid()) @db.Uuid
+  usuarioId     String?  @map("usuario_id") @db.Uuid
+  tablaAfectada String?  @map("tabla_afectada") @db.VarChar(100)
+  registroId    String?  @map("registro_id") @db.Uuid
+  accion        String?  @db.VarChar(50)
+  descripcion   String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+  @@map("auditoria_basica")
+}
