@@ -128,21 +128,6 @@ h3 {
   width: 40px;
 }
 
-.view-switcher {
-  align-items: center;
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  gap: 8px;
-  padding: 8px;
-  position: fixed;
-  right: 18px;
-  top: 18px;
-  z-index: 20;
-}
-
 .public-shell {
   background: var(--color-white);
   min-height: 100vh;
@@ -1943,12 +1928,6 @@ h3 {
 }
 
 @media (max-width: 900px) {
-  .view-switcher {
-    bottom: 14px;
-    right: 14px;
-    top: auto;
-  }
-
   .public-navbar {
     padding: 0 18px;
   }

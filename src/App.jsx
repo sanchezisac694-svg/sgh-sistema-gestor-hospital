@@ -270,18 +270,6 @@ export default function App() {
 
   return (
     <>
-      <div className="view-switcher" aria-label="Cambiar area de prueba">
-        <Button size="sm" variant={view === 'public' ? 'primary' : 'ghost'} onClick={() => navigate('/')}>
-          Pública
-        </Button>
-        <Button size="sm" variant={view === 'admin' ? 'primary' : 'ghost'} onClick={() => setAdminView()}>
-          Admin
-        </Button>
-        <Button size="sm" variant={view === 'doctor' ? 'primary' : 'ghost'} onClick={() => setDoctorView()}>
-          Doctor
-        </Button>
-      </div>
-
       {view === 'public' && (
         <PublicLayout navigate={navigate} onNavigate={setView}>
           {renderPublicRoute()}
