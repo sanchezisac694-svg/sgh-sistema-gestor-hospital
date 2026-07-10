@@ -152,3 +152,14 @@ Si subir:
 - `backend/prisma/migrations/`
 - `src/`
 - `backend/src/`
+
+## Flujo de trabajo
+
+Este proyecto utiliza ramas de Git y Pull Requests para revisar los cambios antes de integrarlos a la rama principal.
+
+### Reglas básicas
+
+- No trabajar directamente en `main`.
+- Crear una rama por cada tarea.
+- Usar commits descriptivos.
+- Abrir un Pull Request antes de integrar cambios.
