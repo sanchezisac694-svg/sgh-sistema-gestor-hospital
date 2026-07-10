@@ -152,3 +152,7 @@ Si subir:
 - `backend/prisma/migrations/`
 - `src/`
 - `backend/src/`
+
+## Flujo de trabajo
+
+Este proyecto utiliza ramas de Git y Pull Requests para revisar los cambios antes de integrarlos a la rama principal.
